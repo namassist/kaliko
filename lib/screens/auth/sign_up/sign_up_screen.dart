@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class RegisterProfileScreen extends StatefulWidget {
-  const RegisterProfileScreen({super.key});
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
 
   @override
-  State<RegisterProfileScreen> createState() => _RegisterProfileScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
+class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,13 +21,13 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
               const SizedBox(height: 80),
               Image.asset(
                 'assets/icons/kaliko-app.png',
-                width: 145,
-                height: 145,
+                width: 175,
+                height: 175,
               ),
               const SizedBox(height: 40),
               TextFormField(
                 decoration: const InputDecoration(
-                  labelText: 'Nama Lengkap',
+                  labelText: 'Alamat Email',
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Color(0xFFF75320)),
                   ),
@@ -38,80 +38,38 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
               ),
               const SizedBox(height: 30),
               TextFormField(
+                obscureText: true,
                 decoration: const InputDecoration(
-                  labelText: 'Asal dari mana',
+                  labelText: 'Password',
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Color(0xFFF75320)),
                   ),
                   focusedBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Color(0xFFF75320)),
                   ),
+                  suffixIcon: Icon(Icons.visibility_off),
                 ),
               ),
               const SizedBox(height: 30),
               TextFormField(
+                obscureText: true,
                 decoration: const InputDecoration(
-                  labelText: 'Nomor Telepon',
+                  labelText: 'Password',
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Color(0xFFF75320)),
                   ),
                   focusedBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Color(0xFFF75320)),
                   ),
+                  suffixIcon: Icon(Icons.visibility_off),
                 ),
               ),
-              const SizedBox(height: 30),
-              TextFormField(
-                mouseCursor: SystemMouseCursors.click,
-                onTap: () {
-                  // widget.onTap();
-                  setState(() {});
-                },
-                keyboardType: TextInputType.datetime,
-                decoration: const InputDecoration(
-                  labelText: 'Tanggal Masuk',
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFF75320)),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFF75320)),
-                  ),
-                  suffixIcon: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Icon(
-                      Icons.calendar_month,
-                      size: 16,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
-              // Row(
-              //   children: [
-              //     const Text("02",
-              //         style: TextStyle(
-              //             fontSize:
-              //                 18)), // Replace with TextFormField for user input
-              //     Column(
-              //       children: [
-              //         IconButton(
-              //           icon: const Icon(Icons.arrow_drop_up),
-              //           onPressed: () {},
-              //         ),
-              //         IconButton(
-              //           icon: const Icon(Icons.arrow_drop_down),
-              //           onPressed: () {},
-              //         ),
-              //       ],
-              //     ),
-              //   ],
-              // ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 50),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/login');
+                    Navigator.pushNamed(context, '/register-profile');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFF75320),
@@ -127,7 +85,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
                     ),
                   ),
                   child: const Text(
-                    'Register',
+                    'Next',
                   ),
                 ),
               ),

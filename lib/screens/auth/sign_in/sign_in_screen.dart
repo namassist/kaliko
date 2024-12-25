@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class SignInScreen extends StatefulWidget {
+  const SignInScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<SignInScreen> createState() => _SignInScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,6 +28,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               TextFormField(
                 decoration: const InputDecoration(
                   labelText: 'Alamat Email',
+                  labelStyle: TextStyle(
+                    color: Colors.black54,
+                  ),
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Color(0xFFF75320)),
                   ),
@@ -36,7 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
               TextFormField(
                 obscureText: true,
                 decoration: const InputDecoration(
@@ -50,26 +53,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   suffixIcon: Icon(Icons.visibility_off),
                 ),
               ),
-              const SizedBox(height: 30),
-              TextFormField(
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFF75320)),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: TextButton(
+                  onPressed: () {},
+                  child: const Text(
+                    'Forgot Password?',
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 14,
+                        fontWeight: FontWeight.normal),
                   ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFF75320)),
-                  ),
-                  suffixIcon: Icon(Icons.visibility_off),
                 ),
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 40),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/register-profile');
+                    Navigator.pushNamed(context, '/admin-dashboard');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFF75320),
@@ -85,9 +88,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   child: const Text(
-                    'Next',
+                    'Login',
                   ),
                 ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Don\'t have an account? ',
+                      style: TextStyle(color: Colors.black)),
+                  GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, '/register');
+                      },
+                      child: const Text('Sign Up',
+                          style: TextStyle(color: Color(0xFFF75320)))),
+                ],
               ),
             ],
           ),

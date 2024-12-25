@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:kaliko/widgets/room_card.dart';
 
-class DashboardAdmin extends StatefulWidget {
-  const DashboardAdmin({super.key});
+class DashboardAdminScreen extends StatefulWidget {
+  const DashboardAdminScreen({super.key});
 
   @override
-  State<DashboardAdmin> createState() => _DashboardAdminState();
+  State<DashboardAdminScreen> createState() => _DashboardAdminScreenState();
 }
 
-class _DashboardAdminState extends State<DashboardAdmin> {
+class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -18,7 +18,7 @@ class _DashboardAdminState extends State<DashboardAdmin> {
   }
 
   void _handleLogout() {
-    Navigator.pushNamed(context, '/login');
+    Navigator.pushNamed(context, '/user/dashboard');
   }
 
   @override

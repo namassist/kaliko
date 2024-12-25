@@ -1,28 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:kaliko/screens/admin/dashboard.dart';
-import 'package:kaliko/screens/admin/room_detail.dart';
-import 'package:kaliko/screens/register/register_profile_screen.dart';
-import 'package:kaliko/screens/register/register_screen.dart';
+import 'package:kaliko/screens/admin/invoice.dart';
+import 'package:kaliko/screens/admin/detail_room.dart';
+import 'package:kaliko/screens/auth/sign_in/sign_in_screen.dart';
+import 'package:kaliko/screens/auth/sign_up/sign_up_profile_screen.dart';
+import 'package:kaliko/screens/auth/sign_up/sign_up_screen.dart';
 import 'package:kaliko/screens/splash_screen.dart';
-import '../../screens/home/home_screen.dart';
+import 'package:kaliko/screens/user/dashboard.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':
         return MaterialPageRoute(builder: (_) => const SplashScreen());
-      case '/login':
-        return MaterialPageRoute(builder: (_) => const LoginPage());
-      case '/register':
-        return MaterialPageRoute(builder: (_) => const RegisterScreen());
-      case '/register-profile':
-        return MaterialPageRoute(builder: (_) => const RegisterProfileScreen());
+      case '/auth/sign-in':
+        return MaterialPageRoute(builder: (_) => const SignInScreen());
+      case '/auth/sign-up':
+        return MaterialPageRoute(builder: (_) => const SignUpScreen());
+      case '/auth/sign-up-profile':
+        return MaterialPageRoute(builder: (_) => const SignUpProfileScreen());
       case '/admin-dashboard':
-        return MaterialPageRoute(builder: (_) => const DashboardAdmin());
-      case '/admin/room-detail':
+        return MaterialPageRoute(builder: (_) => const DashboardAdminScreen());
+      case '/admin/detail-room':
         final args = settings.arguments as Map<String, dynamic>;
         return MaterialPageRoute(
-          builder: (_) => RoomDetail(
+          builder: (_) => DetailRoomAdminScreen(
             kamarId: args['kamarId'],
             title: args['title'],
             residentName: args['residentName'],
@@ -31,20 +33,14 @@ class AppRouter {
       case '/admin/invoice':
         final args = settings.arguments as Map<String, dynamic>;
         return MaterialPageRoute(
-          builder: (_) => RoomDetail(
+          builder: (_) => InvoiceAdmin(
             kamarId: args['kamarId'],
-            title: args['title'],
-            residentName: args['residentName'],
           ),
         );
+      case '/user/dashboard':
+        return MaterialPageRoute(builder: (_) => const DashboardUserScreen());
       default:
-        return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            body: Center(
-              child: Text('No route defined for ${settings.name}'),
-            ),
-          ),
-        );
+        return MaterialPageRoute(builder: (_) => const SignInScreen());
     }
   }
 }

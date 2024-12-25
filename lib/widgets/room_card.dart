@@ -18,7 +18,7 @@ class RoomCard extends StatelessWidget {
       onTap: () {
         Navigator.pushNamed(
           context,
-          '/admin/room-detail',
+          '/admin/detail-room',
           arguments: {
             'kamarId': kamarId,
             'title': title,

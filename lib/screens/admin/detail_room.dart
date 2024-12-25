@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:kaliko/widgets/show_dialog.dart';
+import 'package:kaliko/widgets/usage_row.dart';
 
-class RoomDetail extends StatelessWidget {
+class DetailRoomAdminScreen extends StatelessWidget {
   final String kamarId;
   final String title;
   final String residentName;
 
-  const RoomDetail({
+  const DetailRoomAdminScreen({
     super.key,
     required this.kamarId,
     required this.title,
@@ -21,10 +22,16 @@ class RoomDetail extends StatelessWidget {
       closeButtonText: 'Batal',
       confirmButtonText: 'Iya',
       onClosePressed: () {
-        print('Close button pressed');
+        debugPrint('Close button pressed');
       },
       onConfirmPressed: () {
-        print('Confirm button pressed');
+        Navigator.pushNamed(
+          context,
+          '/admin/invoice',
+          arguments: {
+            'kamarId': kamarId,
+          },
+        );
       },
     );
   }
@@ -34,6 +41,7 @@ class RoomDetail extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        toolbarHeight: 30,
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -132,16 +140,22 @@ class RoomDetail extends StatelessWidget {
                       const SizedBox(height: 16.0),
                       Column(
                         children: [
-                          _buildUsageRow('Nama', residentName),
-                          _buildUsageRow('No Kamar', '1'),
-                          _buildUsageRow('Harga/kWh', 'Rp 1.400,00'),
-                          _buildUsageRow('Tegangan', '138'),
-                          _buildUsageRow('Arus', '138'),
-                          _buildUsageRow('Daya Aktif', '138'),
-                          _buildUsageRow('Faktor Daya', '138'),
-                          _buildUsageRow('Energi Total', '138'),
-                          _buildUsageRow('Start Date', '1 Januari 2025'),
-                          _buildUsageRow('End Date', '1 Februari 2025'),
+                          UsageRow(
+                            label: 'Nama',
+                            value: residentName,
+                          ),
+                          const UsageRow(label: 'No Kamar', value: '1'),
+                          const UsageRow(
+                              label: 'Harga/kWh', value: 'Rp 1.400,00'),
+                          const UsageRow(label: 'Tegangan', value: '138'),
+                          const UsageRow(label: 'Arus', value: '138'),
+                          const UsageRow(label: 'Daya Aktif', value: '138'),
+                          const UsageRow(label: 'Faktor Daya', value: '138'),
+                          const UsageRow(label: 'Energi Total', value: '138'),
+                          const UsageRow(
+                              label: 'Start Date', value: '1 Januari 2025'),
+                          const UsageRow(
+                              label: 'End Date', value: '1 Februari 2025'),
                         ],
                       ),
                       const SizedBox(height: 24.0),
@@ -170,32 +184,6 @@ class RoomDetail extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildUsageRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 15.0,
-              color: Color(0xff6C6C6C),
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16.0,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-        ],
       ),
     );
   }
