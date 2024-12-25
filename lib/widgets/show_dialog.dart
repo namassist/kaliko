@@ -63,9 +63,9 @@ Future<void> showCustomDialog({
               const SizedBox(width: 24),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).pop(); // Close the dialog
-                  if (onClosePressed != null) {
-                    onClosePressed(); // Execute custom close action
+                  Navigator.of(context).pop();
+                  if (onConfirmPressed != null) {
+                    onConfirmPressed();
                   }
                 },
                 style: ElevatedButton.styleFrom(
