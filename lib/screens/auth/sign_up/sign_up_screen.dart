@@ -8,88 +8,133 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final _formKey = GlobalKey<FormState>();
+  String _email = '';
+  String _password = '';
+  String _confirmPassword = '';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 80),
-              Image.asset(
-                'assets/icons/kaliko-app.png',
-                width: 175,
-                height: 175,
-              ),
-              const SizedBox(height: 40),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Alamat Email',
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFF75320)),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFF75320)),
-                  ),
+        child: Form(
+          key: _formKey,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 30),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 80),
+                Image.asset(
+                  'assets/icons/kaliko-app.png',
+                  width: 175,
+                  height: 175,
                 ),
-              ),
-              const SizedBox(height: 30),
-              TextFormField(
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFF75320)),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFF75320)),
-                  ),
-                  suffixIcon: Icon(Icons.visibility_off),
-                ),
-              ),
-              const SizedBox(height: 30),
-              TextFormField(
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFF75320)),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFF75320)),
-                  ),
-                  suffixIcon: Icon(Icons.visibility_off),
-                ),
-              ),
-              const SizedBox(height: 50),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/register-profile');
+                const SizedBox(height: 40),
+                TextFormField(
+                  keyboardType: TextInputType.emailAddress,
+                  onChanged: (value) => _email = value,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email';
+                    }
+                    if (!value.contains('@')) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF75320),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 20),
-                    textStyle: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
+                  decoration: const InputDecoration(
+                    labelText: 'Alamat Email',
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFF75320)),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFF75320)),
                     ),
                   ),
-                  child: const Text(
-                    'Next',
+                ),
+                const SizedBox(height: 30),
+                TextFormField(
+                  obscureText: true,
+                  onChanged: (value) => _password = value,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFF75320)),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFF75320)),
+                    ),
+                    suffixIcon: Icon(Icons.visibility_off),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 30),
+                TextFormField(
+                  obscureText: true,
+                  onChanged: (value) => _confirmPassword = value,
+                  validator: (value) {
+                    if (value != _confirmPassword) {
+                      return 'Passwords do not match';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFF75320)),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFF75320)),
+                    ),
+                    suffixIcon: Icon(Icons.visibility_off),
+                  ),
+                ),
+                const SizedBox(height: 50),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        Navigator.pushNamed(
+                          context,
+                          '/auth/sign-up-profile',
+                          arguments: {
+                            'email': _email,
+                            'password': _password,
+                          },
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF75320),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 20),
+                      textStyle: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                    ),
+                    child: const Text(
+                      'Next',
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

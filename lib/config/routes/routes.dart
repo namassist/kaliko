@@ -18,7 +18,13 @@ class AppRouter {
       case '/auth/sign-up':
         return MaterialPageRoute(builder: (_) => const SignUpScreen());
       case '/auth/sign-up-profile':
-        return MaterialPageRoute(builder: (_) => const SignUpProfileScreen());
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => SignUpProfileScreen(
+            email: args['email'],
+            password: args['password'],
+          ),
+        );
       case '/admin-dashboard':
         return MaterialPageRoute(builder: (_) => const DashboardAdminScreen());
       case '/admin/detail-room':

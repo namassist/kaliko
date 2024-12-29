@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "129854182358",
+    "firebase_url": "https://kalikomonitoringlistrik-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "kalikomonitoringlistrik",
+    "storage_bucket": "kalikomonitoringlistrik.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:129854182358:android:aa38c45a5a5efbc31e8a77",
+        "android_client_info": {
+          "package_name": "com.example.kaliko"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAixiuvZ9Jqlp2TPBWgmfXKuTwIIxmttO0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
