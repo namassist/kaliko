@@ -1,4 +1,3 @@
-// lib/services/firebase_service.dart
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -43,11 +42,78 @@ class FirebaseService {
     }
   }
 
+  Future<List<UserModel>> getAllUsers() async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('roleId', isEqualTo: 'user')
+          .get();
+
+      final users = querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        return UserModel(
+          id: doc.id,
+          email: data['email'],
+          fullname: data['fullname'],
+          origin: data['origin'],
+          phone: data['phone'],
+          startDate: (data['startDate'] as Timestamp).toDate(),
+          roomId: data['roomId'],
+          roleId: data['roleId'],
+          createdAt: (data['createdAt'] as Timestamp).toDate(),
+          updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+        );
+      }).toList();
+
+      return users;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<UserModel?> getCurrentUser() async {
+    final user = _auth.currentUser;
+
+    if (user != null) {
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+
+      if (userDoc.exists) {
+        final data = userDoc.data()!;
+        return UserModel(
+          id: user.uid,
+          email: data['email'],
+          fullname: data['fullname'],
+          origin: data['origin'],
+          phone: data['phone'],
+          startDate: (data['startDate'] as Timestamp).toDate(),
+          roomId: data['roomId'],
+          roleId: data['roleId'],
+          createdAt: (data['createdAt'] as Timestamp).toDate(),
+          updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+        );
+      }
+    }
+    return null;
+  }
+
+  Stream<PowerUsageModel> getRoomControling(String roomNumber) {
+    return _rtdb
+        .ref()
+        .child('controling')
+        .child(roomNumber)
+        .onValue
+        .map((event) {
+      final data = Map<dynamic, dynamic>.from(
+          event.snapshot.value as Map<dynamic, dynamic>);
+      return PowerUsageModel.fromRealtime(data);
+    });
+  }
+
   Stream<PowerUsageModel> getRoomPowerUsage(String roomNumber) {
     return _rtdb
         .ref()
         .child('monitoring')
-        .child('kamar$roomNumber')
+        .child(roomNumber)
         .onValue
         .map((event) {
       final data = Map<dynamic, dynamic>.from(
@@ -59,10 +125,23 @@ class FirebaseService {
   Future<void> updateDeviceControl(
       String roomNumber, String jam, String tanggal) async {
     try {
-      await _rtdb.ref().child('controlling').child('kamar$roomNumber').update({
+      await _rtdb.ref().child('controling').child(roomNumber).update({
         'jam': jam,
         'tanggal': tanggal,
-        'lastUpdated': ServerValue.timestamp,
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> resetDeviceMonitoring(String roomNumber) async {
+    try {
+      await _rtdb.ref().child('monitoring').child(roomNumber).update({
+        'current': 0,
+        'energy': 0,
+        'power': 0,
+        'powerFactor': 0,
+        'voltage': 0,
       });
     } catch (e) {
       rethrow;

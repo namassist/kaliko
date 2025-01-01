@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:kaliko/models/user_model.dart';
 
 class RoomCard extends StatelessWidget {
-  final String kamarId;
-  final String title;
-  final String subtitle;
+  final String id;
+  final String roomId;
+  final String name;
+  final UserModel user;
 
-  const RoomCard({
-    super.key,
-    required this.kamarId,
-    required this.title,
-    required this.subtitle,
-  });
+  const RoomCard(
+      {super.key,
+      required this.id,
+      required this.roomId,
+      required this.name,
+      required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +22,7 @@ class RoomCard extends StatelessWidget {
           context,
           '/admin/detail-room',
           arguments: {
-            'kamarId': kamarId,
-            'title': title,
-            'residentName': subtitle,
+            'user': user,
           },
         );
       },
@@ -51,7 +51,7 @@ class RoomCard extends StatelessWidget {
               ),
               const SizedBox(height: 8.0),
               Text(
-                title,
+                roomId,
                 style: const TextStyle(
                   fontSize: 16.0,
                   fontWeight: FontWeight.bold,
@@ -59,7 +59,7 @@ class RoomCard extends StatelessWidget {
               ),
               const SizedBox(height: 4.0),
               Text(
-                subtitle,
+                name,
                 textAlign: TextAlign.center,
               ),
             ],

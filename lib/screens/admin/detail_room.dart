@@ -1,39 +1,76 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:kaliko/models/power_usage_model.dart';
+import 'package:kaliko/models/user_model.dart';
+import 'package:kaliko/services/firebase_services.dart';
+import 'package:kaliko/utils/date_formatter.dart';
+import 'package:kaliko/utils/format_currency.dart';
 import 'package:kaliko/widgets/show_dialog.dart';
 import 'package:kaliko/widgets/usage_row.dart';
+import 'package:rxdart/rxdart.dart'; // Untuk StreamZip
 
-class DetailRoomAdminScreen extends StatelessWidget {
-  final String kamarId;
-  final String title;
-  final String residentName;
+class DetailRoomAdminScreen extends StatefulWidget {
+  final UserModel user;
 
-  const DetailRoomAdminScreen({
-    super.key,
-    required this.kamarId,
-    required this.title,
-    required this.residentName,
-  });
+  const DetailRoomAdminScreen({super.key, required this.user});
+
+  @override
+  State<DetailRoomAdminScreen> createState() => _DetailRoomAdminScreenState();
+}
+
+class _DetailRoomAdminScreenState extends State<DetailRoomAdminScreen> {
+  late final FirebaseService _firebaseService;
+  final ValueNotifier<double> energyNotifier = ValueNotifier(0.0);
+
+  @override
+  void initState() {
+    super.initState();
+    _firebaseService = FirebaseService();
+    initializeDateFormatting('id_ID');
+  }
 
   void _showDialog(BuildContext context) {
     showCustomDialog(
       context: context,
-      title: 'Action Required',
-      content: 'Do you want to proceed with the action?',
+      title: 'Pemberitahuan',
+      content: 'Apakah benar melakukan pembayaran?',
+      showCloseButton: true,
       closeButtonText: 'Batal',
       confirmButtonText: 'Iya',
-      onClosePressed: () {
-        debugPrint('Close button pressed');
-      },
-      onConfirmPressed: () {
-        Navigator.pushNamed(
-          context,
-          '/admin/invoice',
-          arguments: {
-            'kamarId': kamarId,
-          },
-        );
+      onConfirmPressed: () async {
+        String jam = DateTime.now().hour.toString();
+
+        DateTime nextMonth = DateTime.now().add(const Duration(days: 30));
+        String tanggal = "${nextMonth.day.toString().padLeft(2, '0')}/"
+            "${(nextMonth.month).toString().padLeft(2, '0')}/"
+            "${nextMonth.year}";
+
+        try {
+          await _firebaseService.updateDeviceControl(
+              widget.user.roomId, jam, tanggal);
+
+          await _firebaseService.resetDeviceMonitoring(widget.user.roomId);
+
+          Navigator.of(context).pop();
+
+          Navigator.pushNamed(
+            context,
+            '/admin/invoice',
+            arguments: {
+              'kamarId': widget.user.id,
+            },
+          );
+        } catch (e) {
+          debugPrint('Proses gagal: $e');
+          Navigator.of(context).pop();
+        }
       },
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -109,13 +146,18 @@ class DetailRoomAdminScreen extends StatelessWidget {
                                   fontSize: 15.0, color: Colors.black87),
                             ),
                             const SizedBox(height: 8.0),
-                            const Text(
-                              'Rp 200.000,00',
-                              style: TextStyle(
-                                fontSize: 36.0,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black,
-                              ),
+                            ValueListenableBuilder<double>(
+                              valueListenable: energyNotifier,
+                              builder: (context, energy, child) {
+                                return Text(
+                                  formatCurrency(1400 * energy),
+                                  style: const TextStyle(
+                                    fontSize: 36.0,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black,
+                                  ),
+                                );
+                              },
                             ),
                             const SizedBox(height: 8.0),
                             Row(
@@ -138,26 +180,87 @@ class DetailRoomAdminScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16.0),
-                      Column(
-                        children: [
-                          UsageRow(
-                            label: 'Nama',
-                            value: residentName,
-                          ),
-                          const UsageRow(label: 'No Kamar', value: '1'),
-                          const UsageRow(
-                              label: 'Harga/kWh', value: 'Rp 1.400,00'),
-                          const UsageRow(label: 'Tegangan', value: '138'),
-                          const UsageRow(label: 'Arus', value: '138'),
-                          const UsageRow(label: 'Daya Aktif', value: '138'),
-                          const UsageRow(label: 'Faktor Daya', value: '138'),
-                          const UsageRow(label: 'Energi Total', value: '138'),
-                          const UsageRow(
-                              label: 'Start Date', value: '1 Januari 2025'),
-                          const UsageRow(
-                              label: 'End Date', value: '1 Februari 2025'),
-                        ],
-                      ),
+                      StreamBuilder<List<PowerUsageModel>>(
+                          stream: Rx.zip([
+                            _firebaseService
+                                .getRoomPowerUsage(widget.user.roomId),
+                            _firebaseService
+                                .getRoomControling(widget.user.roomId)
+                          ], (List<PowerUsageModel> values) => values),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasError) {
+                              return const Text(
+                                  'Error loading power usage data');
+                            }
+
+                            if (!snapshot.hasData) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+
+                            final powerUsage = snapshot.data![0];
+                            final controlling = snapshot.data![1];
+
+                            final formattedDueDate =
+                                DateFormatter.formatToLocaleDate(
+                                    controlling.tanggal);
+                            final formattedStartDate =
+                                DateFormatter.getStartDate(controlling.tanggal);
+
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              energyNotifier.value = powerUsage.energy;
+                            });
+
+                            return Column(
+                              children: [
+                                UsageRow(
+                                    label: 'Nama',
+                                    value: widget.user.fullname,
+                                    gap: 20),
+                                UsageRow(
+                                    label: 'No Kamar',
+                                    value: widget.user.roomId.split('kamar')[1],
+                                    gap: 20),
+                                const UsageRow(
+                                    label: 'Harga/kWh',
+                                    value: 'Rp 1.400,00',
+                                    gap: 20),
+                                UsageRow(
+                                    label: 'Tegangan',
+                                    value:
+                                        "${powerUsage.voltage.toStringAsFixed(2)} V",
+                                    gap: 20),
+                                UsageRow(
+                                    label: 'Arus',
+                                    value:
+                                        "${powerUsage.current.toStringAsFixed(2)} A",
+                                    gap: 20),
+                                UsageRow(
+                                    label: 'Daya Aktif',
+                                    value:
+                                        "${powerUsage.power.toStringAsFixed(2)} W",
+                                    gap: 20),
+                                UsageRow(
+                                    label: 'Faktor Daya',
+                                    value: powerUsage.powerFactor
+                                        .toStringAsFixed(2),
+                                    gap: 20),
+                                UsageRow(
+                                    label: 'Energi Total',
+                                    value:
+                                        '${powerUsage.energy.toStringAsFixed(2)} kWh',
+                                    gap: 20),
+                                UsageRow(
+                                    label: 'Tanggal Mulai',
+                                    value: formattedStartDate,
+                                    gap: 20),
+                                UsageRow(
+                                    label: 'Jatuh Tempo',
+                                    value: formattedDueDate,
+                                    gap: 20)
+                              ],
+                            );
+                          }),
                       const SizedBox(height: 24.0),
                       ElevatedButton(
                         onPressed: () => _showDialog(context),

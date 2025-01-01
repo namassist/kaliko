@@ -4,6 +4,8 @@ class PowerUsageModel {
   final double power;
   final double powerFactor;
   final double voltage;
+  final String jam;
+  final String tanggal;
   final DateTime timestamp;
 
   PowerUsageModel({
@@ -12,6 +14,8 @@ class PowerUsageModel {
     required this.power,
     required this.powerFactor,
     required this.voltage,
+    required this.jam,
+    required this.tanggal,
     required this.timestamp,
   });
 
@@ -22,6 +26,8 @@ class PowerUsageModel {
       'power': power,
       'powerFactor': powerFactor,
       'voltage': voltage,
+      'jam': jam,
+      'tanggal': tanggal,
       'timestamp': timestamp,
     };
   }
@@ -33,6 +39,8 @@ class PowerUsageModel {
       power: (data['power'] ?? 0).toDouble(),
       powerFactor: (data['powerFactor'] ?? 0).toDouble(),
       voltage: (data['voltage'] ?? 0).toDouble(),
+      jam: (data['jam'] ?? ""),
+      tanggal: (data['tanggal'] ?? ""),
       timestamp: DateTime.now(),
     );
   }

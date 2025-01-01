@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:kaliko/models/user_model.dart';
 import 'package:kaliko/services/firebase_services.dart';
+import 'package:kaliko/utils/validation_rules.dart';
+import 'package:kaliko/widgets/show_dialog.dart';
 
 class SignUpProfileScreen extends StatefulWidget {
   final String email;
@@ -45,12 +47,10 @@ class _SignUpProfileScreenState extends State<SignUpProfileScreen> {
       setState(() => _isLoading = true);
 
       try {
-        // First, create the user authentication
         final UserCredential userCredential = await FirebaseAuth.instance
             .createUserWithEmailAndPassword(email: email, password: password);
 
         if (userCredential.user != null) {
-          // Create UserModel instance
           final userModel = UserModel(
             id: userCredential.user!.uid,
             email: email,
@@ -58,25 +58,28 @@ class _SignUpProfileScreenState extends State<SignUpProfileScreen> {
             origin: _origin,
             phone: _phone,
             startDate: DateTime.parse(_dateController.text),
-            roomId: '', // Room will be assigned by admin
-            roleId: 'user', // Default role
+            roomId: '',
+            roleId: 'user',
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
           );
 
-          // Save user data to Firestore using the service
           await _firebaseService.createUser(userModel);
 
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Registrasi berhasil!')),
-            );
-
-            // Navigate to sign in screen
-            Navigator.pushNamedAndRemoveUntil(
-              context,
-              '/auth/sign-in',
-              (route) => false,
+            await showCustomDialog(
+              context: context,
+              title: 'Success',
+              content: 'Registrasi berhasil!',
+              confirmButtonText: 'OK',
+              showCloseButton: false,
+              onConfirmPressed: () {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/auth/sign-in',
+                  (route) => false,
+                );
+              },
             );
           }
         }
@@ -97,14 +100,22 @@ class _SignUpProfileScreenState extends State<SignUpProfileScreen> {
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMessage)),
+          await showCustomDialog(
+            context: context,
+            title: 'Error',
+            content: errorMessage,
+            showCloseButton: false,
+            closeButtonText: 'OK',
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Terjadi kesalahan: $e')),
+          await showCustomDialog(
+            context: context,
+            title: 'Error',
+            content: 'Terjadi kesalahan: $e',
+            showCloseButton: false,
+            closeButtonText: 'OK',
           );
         }
       } finally {
@@ -119,133 +130,129 @@ class _SignUpProfileScreenState extends State<SignUpProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-              color: Color(0xFFF75320),
-            ))
-          : SingleChildScrollView(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 30),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 80),
-                      Image.asset(
-                        'assets/icons/kaliko-app.png',
-                        width: 145,
-                        height: 145,
+      body: SingleChildScrollView(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 30),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 80),
+                Image.asset(
+                  'assets/icons/kaliko-app.png',
+                  width: 145,
+                  height: 145,
+                ),
+                const SizedBox(height: 40),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Nama Lengkap',
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFF75320)),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFF75320)),
+                    ),
+                  ),
+                  onChanged: (value) => _fullname = value,
+                  validator: (value) => ValidationUtils.validateMinLength(
+                      value, 4, 'Nama Lengkap'),
+                ),
+                const SizedBox(height: 30),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Asal dari mana',
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFF75320)),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFF75320)),
+                    ),
+                  ),
+                  onChanged: (value) => _origin = value,
+                  validator: (value) =>
+                      ValidationUtils.validateMinLength(value, 4, 'Asal'),
+                ),
+                const SizedBox(height: 30),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Nomor Telepon',
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFF75320)),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFF75320)),
+                    ),
+                  ),
+                  keyboardType: TextInputType.phone,
+                  onChanged: (value) => _phone = value,
+                  validator: ValidationUtils.validatePhone,
+                ),
+                const SizedBox(height: 30),
+                TextFormField(
+                  controller: _dateController,
+                  mouseCursor: SystemMouseCursors.click,
+                  onTap: _selectDate,
+                  keyboardType: TextInputType.datetime,
+                  decoration: const InputDecoration(
+                    labelText: 'Tanggal Masuk',
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFF75320)),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFF75320)),
+                    ),
+                    suffixIcon: Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Icon(
+                        Icons.calendar_month,
+                        size: 16,
+                        color: Color(0xFFF75320),
                       ),
-                      const SizedBox(height: 40),
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Nama Lengkap',
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFFF75320)),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFFF75320)),
-                          ),
-                        ),
-                        onChanged: (value) => _fullname = value,
-                        validator: (value) => value?.isEmpty ?? true
-                            ? 'Nama Lengkap tidak boleh kosong'
-                            : null,
+                    ),
+                  ),
+                  readOnly: true,
+                  validator: (value) => value?.isEmpty ?? true
+                      ? 'Tanggal Masuk tidak boleh kosong'
+                      : null,
+                ),
+                const SizedBox(height: 50),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () =>
+                        _handleSignUp(widget.email, widget.password),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF75320),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 20,
                       ),
-                      const SizedBox(height: 30),
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Asal dari mana',
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFFF75320)),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFFF75320)),
-                          ),
-                        ),
-                        onChanged: (value) => _origin = value,
-                        validator: (value) => value?.isEmpty ?? true
-                            ? 'Asal tidak boleh kosong'
-                            : null,
+                      textStyle: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(height: 30),
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Nomor Telepon',
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFFF75320)),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFFF75320)),
-                          ),
-                        ),
-                        keyboardType: TextInputType.phone,
-                        onChanged: (value) => _phone = value,
-                        validator: (value) => value?.isEmpty ?? true
-                            ? 'Nomor Telepon tidak boleh kosong'
-                            : null,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
                       ),
-                      const SizedBox(height: 30),
-                      TextFormField(
-                        controller: _dateController,
-                        mouseCursor: SystemMouseCursors.click,
-                        onTap: _selectDate,
-                        keyboardType: TextInputType.datetime,
-                        decoration: const InputDecoration(
-                          labelText: 'Tanggal Masuk',
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFFF75320)),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFFF75320)),
-                          ),
-                          suffixIcon: Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Icon(
-                              Icons.calendar_month,
-                              size: 16,
-                              color: Color(0xFFF75320),
-                            ),
-                          ),
-                        ),
-                        readOnly: true,
-                        validator: (value) => value?.isEmpty ?? true
-                            ? 'Tanggal Masuk tidak boleh kosong'
-                            : null,
-                      ),
-                      const SizedBox(height: 50),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => {},
-                          // _handleSignUp(widget.email, widget.password),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF75320),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 20,
-                            ),
-                            textStyle: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(28),
-                            ),
-                          ),
-                          child: const Text('Register'),
-                        ),
-                      ),
-                      const SizedBox(height: 30),
-                    ],
+                    ),
+                    child: _isLoading
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ))
+                        : const Text('Register'),
                   ),
                 ),
-              ),
+                const SizedBox(height: 30),
+              ],
             ),
+          ),
+        ),
+      ),
     );
   }
 

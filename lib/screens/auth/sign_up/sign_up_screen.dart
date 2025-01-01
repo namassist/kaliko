@@ -12,6 +12,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String _email = '';
   String _password = '';
   String _confirmPassword = '';
+  bool _obscureText = true;
+  bool _confirmObscureText = true;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +58,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 30),
                 TextFormField(
-                  obscureText: true,
+                  obscureText: _obscureText,
                   onChanged: (value) => _password = value,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -67,36 +69,57 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     }
                     return null;
                   },
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Password',
-                    enabledBorder: UnderlineInputBorder(
+                    enabledBorder: const UnderlineInputBorder(
                       borderSide: BorderSide(color: Color(0xFFF75320)),
                     ),
-                    focusedBorder: UnderlineInputBorder(
+                    focusedBorder: const UnderlineInputBorder(
                       borderSide: BorderSide(color: Color(0xFFF75320)),
                     ),
-                    suffixIcon: Icon(Icons.visibility_off),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscureText
+                          ? Icons.visibility_off
+                          : Icons.visibility),
+                      onPressed: () {
+                        setState(() {
+                          _obscureText = !_obscureText;
+                        });
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 30),
                 TextFormField(
-                  obscureText: true,
+                  obscureText: _confirmObscureText,
                   onChanged: (value) => _confirmPassword = value,
                   validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your confirm password';
+                    }
                     if (value != _confirmPassword) {
                       return 'Passwords do not match';
                     }
                     return null;
                   },
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Password',
-                    enabledBorder: UnderlineInputBorder(
+                    enabledBorder: const UnderlineInputBorder(
                       borderSide: BorderSide(color: Color(0xFFF75320)),
                     ),
-                    focusedBorder: UnderlineInputBorder(
+                    focusedBorder: const UnderlineInputBorder(
                       borderSide: BorderSide(color: Color(0xFFF75320)),
                     ),
-                    suffixIcon: Icon(Icons.visibility_off),
+                    suffixIcon: IconButton(
+                      icon: Icon(_confirmObscureText
+                          ? Icons.visibility_off
+                          : Icons.visibility),
+                      onPressed: () {
+                        setState(() {
+                          _confirmObscureText = !_confirmObscureText;
+                        });
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 50),

@@ -25,15 +25,13 @@ class AppRouter {
             password: args['password'],
           ),
         );
-      case '/admin-dashboard':
+      case '/admin/dashboard':
         return MaterialPageRoute(builder: (_) => const DashboardAdminScreen());
       case '/admin/detail-room':
         final args = settings.arguments as Map<String, dynamic>;
         return MaterialPageRoute(
           builder: (_) => DetailRoomAdminScreen(
-            kamarId: args['kamarId'],
-            title: args['title'],
-            residentName: args['residentName'],
+            user: args['user'],
           ),
         );
       case '/admin/invoice':
