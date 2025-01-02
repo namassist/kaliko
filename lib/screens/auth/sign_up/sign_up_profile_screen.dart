@@ -28,25 +28,46 @@ class _SignUpProfileScreenState extends State<SignUpProfileScreen> {
   String _origin = '';
   String _phone = '';
   bool _isLoading = false;
+  int _roomValue = 1;
 
   Future<void> _selectDate() async {
+    DateTime today = DateTime.now();
+
     DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: today,
       firstDate: DateTime(2000),
-      lastDate: DateTime(2025),
+      lastDate: DateTime(2025, 12, 31),
     );
 
     if (picked != null) {
-      _dateController.text = picked.toString().split(' ')[0];
+      _dateController.text = picked
+          .toString()
+          .split(' ')[0]; // Set tanggal yang dipilih ke controller
     }
   }
 
   Future<void> _handleSignUp(String email, String password) async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
+      final roomId = 'kamar$_roomValue';
 
       try {
+        final isRoomAvailable =
+            await _firebaseService.checkRoomAvailability(roomId);
+        if (!isRoomAvailable) {
+          if (mounted) {
+            await showCustomDialog(
+              context: context,
+              title: 'Error',
+              content: 'Maaf, kamar ini belum tersedia.',
+              showCloseButton: false,
+              closeButtonText: 'OK',
+            );
+          }
+          return;
+        }
+
         final UserCredential userCredential = await FirebaseAuth.instance
             .createUserWithEmailAndPassword(email: email, password: password);
 
@@ -58,7 +79,7 @@ class _SignUpProfileScreenState extends State<SignUpProfileScreen> {
             origin: _origin,
             phone: _phone,
             startDate: DateTime.parse(_dateController.text),
-            roomId: '',
+            roomId: roomId,
             roleId: 'user',
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
@@ -98,7 +119,6 @@ class _SignUpProfileScreenState extends State<SignUpProfileScreen> {
           default:
             errorMessage = 'Terjadi kesalahan: ${e.message}';
         }
-
         if (mounted) {
           await showCustomDialog(
             context: context,
@@ -123,6 +143,20 @@ class _SignUpProfileScreenState extends State<SignUpProfileScreen> {
           setState(() => _isLoading = false);
         }
       }
+    }
+  }
+
+  void _incrementRoom() {
+    setState(() {
+      _roomValue++;
+    });
+  }
+
+  void _decrementRoom() {
+    if (_roomValue > 1) {
+      setState(() {
+        _roomValue--;
+      });
     }
   }
 
@@ -193,7 +227,10 @@ class _SignUpProfileScreenState extends State<SignUpProfileScreen> {
                 TextFormField(
                   controller: _dateController,
                   mouseCursor: SystemMouseCursors.click,
-                  onTap: _selectDate,
+                  onTap: () async {
+                    FocusScope.of(context).requestFocus(FocusNode());
+                    await _selectDate();
+                  },
                   keyboardType: TextInputType.datetime,
                   decoration: const InputDecoration(
                     labelText: 'Tanggal Masuk',
@@ -216,6 +253,59 @@ class _SignUpProfileScreenState extends State<SignUpProfileScreen> {
                   validator: (value) => value?.isEmpty ?? true
                       ? 'Tanggal Masuk tidak boleh kosong'
                       : null,
+                ),
+                const SizedBox(height: 30),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Nomor Kamar',
+                      style: TextStyle(fontSize: 16, color: Color(0x80000000))),
+                ),
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    TextFormField(
+                      controller:
+                          TextEditingController(text: _roomValue.toString()),
+                      readOnly: true,
+                      decoration: InputDecoration(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 10),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                              color: Color(0xFFF75320), width: 1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                              color: Color(0xFFF75320), width: 1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        constraints:
+                            const BoxConstraints(maxWidth: 48, maxHeight: 32),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Column(
+                      children: [
+                        InkWell(
+                          onTap: _incrementRoom,
+                          child: const Icon(
+                            Icons.keyboard_arrow_up,
+                            color: Color(0xFFF75320),
+                            size: 24.0,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: _decrementRoom,
+                          child: const Icon(
+                            Icons.keyboard_arrow_down,
+                            color: Color(0xFFF75320),
+                            size: 24.0,
+                          ),
+                        )
+                      ],
+                    )
+                  ],
                 ),
                 const SizedBox(height: 50),
                 SizedBox(

@@ -148,6 +148,19 @@ class FirebaseService {
     }
   }
 
+  Future<bool> checkRoomAvailability(String roomId) async {
+    final snapshot = await _rtdb.ref().child('monitoring').child(roomId).get();
+    if (!snapshot.exists) return false;
+
+    final querySnapshot = await _firestore
+        .collection('users')
+        .where('roomId', isEqualTo: roomId)
+        .where('roleId', isEqualTo: 'user')
+        .get();
+
+    return querySnapshot.docs.isEmpty;
+  }
+
   Future<void> savePowerUsageHistory(
       String roomId, PowerUsageModel powerUsage) async {
     try {
