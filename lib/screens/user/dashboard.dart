@@ -24,6 +24,7 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
   late final FirebaseService _firebaseService;
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<double> energyNotifier = ValueNotifier(0.0);
+  final ValueNotifier<String> dueDateNotifier = ValueNotifier('');
 
   @override
   void initState() {
@@ -241,11 +242,28 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
                                         ),
                                       ],
                                     ),
-                                    const Text(
-                                      '20 hari',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                      ),
+                                    ValueListenableBuilder<String>(
+                                      valueListenable: dueDateNotifier,
+                                      builder: (context, dueDateStr, child) {
+                                        final dueDate = DateFormat('dd/MM/yyyy')
+                                            .parse(dueDateStr);
+                                        final now = DateTime.now();
+                                        final today = DateTime(
+                                            now.year, now.month, now.day);
+                                        final dueDateOnly = DateTime(
+                                            dueDate.year,
+                                            dueDate.month,
+                                            dueDate.day);
+                                        final remainingDays = dueDateOnly
+                                            .difference(today)
+                                            .inDays;
+                                        return Text(
+                                          '$remainingDays hari',
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ],
                                 ),
@@ -328,6 +346,8 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
                                           .addPostFrameCallback((_) {
                                         energyNotifier.value =
                                             powerUsage.energy;
+                                        dueDateNotifier.value =
+                                            controlling.tanggal;
                                       });
 
                                       return Column(
