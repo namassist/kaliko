@@ -24,13 +24,29 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
   late final FirebaseService _firebaseService;
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<double> energyNotifier = ValueNotifier(0.0);
-  final ValueNotifier<String> dueDateNotifier = ValueNotifier('');
+  final ValueNotifier<String> dueDateNotifier = ValueNotifier(
+    DateFormat('dd/MM/yyyy').format(DateTime.now()),
+  );
 
   @override
   void initState() {
     super.initState();
     _firebaseService = FirebaseService();
     initializeDateFormatting('id_ID');
+  }
+
+  int calculateRemainingDays(String dateStr) {
+    if (dateStr.isEmpty) return 0;
+
+    try {
+      final dueDate = DateFormat('dd/MM/yyyy').parse(dateStr);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final dueDateOnly = DateTime(dueDate.year, dueDate.month, dueDate.day);
+      return dueDateOnly.difference(today).inDays;
+    } catch (e) {
+      return 0;
+    }
   }
 
   @override
@@ -109,23 +125,28 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Row(children: [
-                                Image.asset(
-                                  'assets/icons/electric-transparent.png',
-                                  width: 30,
-                                  height: 30,
-                                  fit: BoxFit.cover,
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  'Hello ${user.fullname}!',
-                                  style: const TextStyle(
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
+                              Expanded(
+                                child: Row(children: [
+                                  Image.asset(
+                                    'assets/icons/electric-transparent.png',
+                                    width: 30,
+                                    height: 30,
+                                    fit: BoxFit.cover,
                                   ),
-                                ),
-                              ]),
+                                  const SizedBox(width: 5),
+                                  Flexible(
+                                    child: Text(
+                                      'Hello ${user.fullname}!',
+                                      style: const TextStyle(
+                                        fontSize: 16.0,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ]),
+                              ),
                               PopupMenuTheme(
                                 data: const PopupMenuThemeData(
                                   color: Colors.white,
@@ -138,21 +159,21 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
                                     size: 28.0,
                                   ),
                                   itemBuilder: (BuildContext context) => [
-                                    const PopupMenuItem(
-                                      value: 'About',
-                                      child: SizedBox(
-                                        width: 100,
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.info_outline,
-                                                size: 20,
-                                                color: Colors.black54),
-                                            SizedBox(width: 10),
-                                            Text('About'),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
+                                    // const PopupMenuItem(
+                                    //   value: 'About',
+                                    //   child: SizedBox(
+                                    //     width: 100,
+                                    //     child: Row(
+                                    //       children: [
+                                    //         Icon(Icons.info_outline,
+                                    //             size: 20,
+                                    //             color: Colors.black54),
+                                    //         SizedBox(width: 10),
+                                    //         Text('About'),
+                                    //       ],
+                                    //     ),
+                                    //   ),
+                                    // ),
                                     PopupMenuItem(
                                       value: 'Logout',
                                       child: const SizedBox(
@@ -215,57 +236,51 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      DateFormat('dd MMM yyyy', 'id_ID')
-                                          .format(DateTime.now()),
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    Row(
-                                      children: [
-                                        ValueListenableBuilder<double>(
-                                          valueListenable: energyNotifier,
-                                          builder: (context, energy, child) {
-                                            return Text(
-                                              formatCurrency(1400 * energy),
-                                              style: const TextStyle(
-                                                fontSize: 28.0,
-                                                fontWeight: FontWeight.w800,
-                                                color: Color(0xffD65A23),
-                                              ),
-                                            );
-                                          },
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        DateFormat('dd MMM yyyy', 'id_ID')
+                                            .format(DateTime.now()),
+                                        style: const TextStyle(
+                                          color: Colors.black,
                                         ),
-                                      ],
-                                    ),
-                                    ValueListenableBuilder<String>(
-                                      valueListenable: dueDateNotifier,
-                                      builder: (context, dueDateStr, child) {
-                                        final dueDate = DateFormat('dd/MM/yyyy')
-                                            .parse(dueDateStr);
-                                        final now = DateTime.now();
-                                        final today = DateTime(
-                                            now.year, now.month, now.day);
-                                        final dueDateOnly = DateTime(
-                                            dueDate.year,
-                                            dueDate.month,
-                                            dueDate.day);
-                                        final remainingDays = dueDateOnly
-                                            .difference(today)
-                                            .inDays;
-                                        return Text(
-                                          '$remainingDays hari',
-                                          style: const TextStyle(
-                                            color: Colors.black,
+                                      ),
+                                      Row(
+                                        children: [
+                                          ValueListenableBuilder<double>(
+                                            valueListenable: energyNotifier,
+                                            builder: (context, energy, child) {
+                                              return Text(
+                                                formatCurrency(1400 * energy),
+                                                style: const TextStyle(
+                                                  fontSize: 28.0,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: Color(0xffD65A23),
+                                                ),
+                                              );
+                                            },
                                           ),
-                                        );
-                                      },
-                                    ),
-                                  ],
+                                        ],
+                                      ),
+                                      ValueListenableBuilder<String>(
+                                        valueListenable: dueDateNotifier,
+                                        builder: (context, dueDateStr, child) {
+                                          final remainingDays =
+                                              calculateRemainingDays(
+                                                  dueDateStr);
+                                          return Text(
+                                            '$remainingDays hari',
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 Image.asset(
                                   'assets/images/electric-pattern.png',
