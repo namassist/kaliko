@@ -1,14 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:kaliko/services/pdf_invoice_services.dart';
+import 'package:kaliko/utils/format_currency.dart';
 import 'package:kaliko/widgets/usage_row.dart';
 
-class InvoiceAdmin extends StatelessWidget {
+class InvoiceAdmin extends StatefulWidget {
   final String kamarId;
+  final String dueDate;
+  final String fullname;
+  final String roomId;
+  final double energy;
 
   const InvoiceAdmin({
     super.key,
     required this.kamarId,
+    required this.dueDate,
+    required this.fullname,
+    required this.roomId,
+    required this.energy,
   });
 
+  @override
+  State<InvoiceAdmin> createState() => _InvoiceAdminState();
+}
+
+class _InvoiceAdminState extends State<InvoiceAdmin> {
   @override
   Widget build(BuildContext context) {
     const totalLabelStyle = TextStyle(
@@ -86,29 +102,32 @@ class InvoiceAdmin extends StatelessWidget {
                         const SizedBox(height: 30.0),
                         Column(
                           children: [
-                            const UsageRow(
+                            UsageRow(
                                 label: 'Tanggal',
-                                value: '2025-01-20 16:33:51 WIB',
+                                value:
+                                    '${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())} WIB',
                                 gap: 20),
                             _buildDottedBorder(),
-                            const UsageRow(
+                            UsageRow(
                                 label: 'Jatuh Tempo',
-                                value: '1 Februari 2025',
+                                value: widget.dueDate,
                                 gap: 20),
-                            const UsageRow(
-                                label: 'Nama',
-                                value: 'Rafael Struick',
+                            UsageRow(
+                                label: 'Nama', value: widget.fullname, gap: 20),
+                            UsageRow(
+                                label: 'No Kamar',
+                                value: widget.roomId,
                                 gap: 20),
-                            const UsageRow(
-                                label: 'No Kamar', value: 'Room 1', gap: 20),
-                            const UsageRow(
-                                label: 'Energi Total', value: '120', gap: 20),
+                            UsageRow(
+                                label: 'Energi Total',
+                                value: widget.energy.toStringAsFixed(0),
+                                gap: 20),
                             const UsageRow(
                                 label: '/kWh', value: 'Rp 1.400,00', gap: 20),
                             _buildDottedBorder(),
-                            const UsageRow(
+                            UsageRow(
                               label: 'Total Bayar',
-                              value: 'Rp 200.000,00',
+                              value: formatCurrency(1400 * widget.energy),
                               labelStyle: totalLabelStyle,
                               valueStyle: totalValueStyle,
                             ),
@@ -121,7 +140,14 @@ class InvoiceAdmin extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () => {},
+                      onPressed: () =>
+                          PdfInvoiceService.generateAndDownloadInvoice(
+                        dueDate: widget.dueDate,
+                        fullname: widget.fullname,
+                        roomId: widget.roomId,
+                        energy: widget.energy,
+                        context: context,
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xff00A6FF),
                         padding: const EdgeInsets.symmetric(vertical: 21.0),
