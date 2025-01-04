@@ -45,19 +45,31 @@ class _DetailRoomAdminScreenState extends State<DetailRoomAdminScreen> {
             "${(nextMonth.month).toString().padLeft(2, '0')}/"
             "${nextMonth.year}";
 
+        final streamData = await Rx.zip([
+          _firebaseService.getRoomPowerUsage(widget.user.roomId),
+          _firebaseService.getRoomControling(widget.user.roomId)
+        ], (List<PowerUsageModel> values) => values).first;
+
+        final powerUsage = streamData[0];
+        final controlling = streamData[1];
+        final formattedDueDate =
+            DateFormatter.formatToLocaleDate(controlling.tanggal);
+
         try {
           await _firebaseService.updateDeviceControl(
               widget.user.roomId, jam, tanggal);
-
           await _firebaseService.resetDeviceMonitoring(widget.user.roomId);
 
           Navigator.of(context).pop();
-
           Navigator.pushNamed(
             context,
             '/admin/invoice',
             arguments: {
               'kamarId': widget.user.id,
+              'dueDate': formattedDueDate,
+              'fullname': widget.user.fullname,
+              'roomId': widget.user.roomId,
+              'energy': powerUsage.energy,
             },
           );
         } catch (e) {

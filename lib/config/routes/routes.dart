@@ -39,6 +39,10 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => InvoiceAdmin(
             kamarId: args['kamarId'],
+            dueDate: args['dueDate'],
+            fullname: args['fullname'],
+            roomId: args['roomId'],
+            energy: args['energy'],
           ),
         );
       case '/user/dashboard':
