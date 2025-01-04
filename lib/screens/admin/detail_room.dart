@@ -173,15 +173,15 @@ class _DetailRoomAdminScreenState extends State<DetailRoomAdminScreen> {
                             ),
                             const SizedBox(height: 8.0),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                const Text(
-                                  '20 hari',
-                                  style: TextStyle(
-                                      fontSize: 16.0,
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.w600),
-                                ),
+                                // const Text(
+                                //   '20 hari',
+                                //   style: TextStyle(
+                                //       fontSize: 16.0,
+                                //       color: Colors.black,
+                                //       fontWeight: FontWeight.w600),
+                                // ),
                                 Image.asset(
                                   'assets/images/mini-logo.png',
                                   width: 80,
