@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:kaliko/models/power_usage_model.dart';
 import 'package:kaliko/models/user_model.dart';
 import 'package:kaliko/services/firebase_services.dart';
+import 'package:kaliko/services/notification_services.dart';
 import 'package:kaliko/utils/date_formatter.dart';
 import 'package:kaliko/utils/format_currency.dart';
 import 'package:kaliko/widgets/show_dialog.dart';
@@ -33,6 +34,11 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
     super.initState();
     _firebaseService = FirebaseService();
     initializeDateFormatting('id_ID');
+    _initializeNotifications();
+  }
+
+  Future<void> _initializeNotifications() async {
+    await NotificationService.initialize();
   }
 
   int calculateRemainingDays(String dateStr) {
@@ -189,8 +195,21 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
                                         ),
                                       ),
                                       onTap: () async {
-                                        await FirebaseAuth.instance.signOut();
-                                        if (mounted) {
+                                        await Future.delayed(Duration.zero);
+
+                                        if (!mounted) return;
+
+                                        try {
+                                          // Sign out from Firebase
+                                          await FirebaseAuth.instance.signOut();
+
+                                          // Clear local session
+                                          await NotificationService
+                                              .clearUserSession();
+
+                                          if (!mounted) return;
+
+                                          // Show dialog
                                           await showCustomDialog(
                                             context: context,
                                             title: 'Berhasil',
@@ -199,12 +218,25 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
                                             showCloseButton: false,
                                             confirmButtonText: 'OK',
                                             onConfirmPressed: () {
+                                              // Navigate after dialog is closed
                                               Navigator.pushNamedAndRemoveUntil(
                                                 context,
                                                 '/auth/sign_in',
                                                 (route) => false,
                                               );
                                             },
+                                          );
+                                        } catch (e) {
+                                          // Handle any errors during logout
+                                          if (!mounted) return;
+
+                                          // Show error dialog
+                                          await showCustomDialog(
+                                            context: context,
+                                            title: 'Error',
+                                            content:
+                                                'Gagal melakukan logout. Silakan coba lagi.',
+                                            confirmButtonText: 'OK',
                                           );
                                         }
                                       },
@@ -224,201 +256,219 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
                             ),
                           ),
                           const SizedBox(height: 15),
-                          Container(
-                            padding: const EdgeInsets.only(
-                              left: 27.0,
-                              right: 18,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(28.0),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        DateFormat('dd MMM yyyy', 'id_ID')
-                                            .format(DateTime.now()),
-                                        style: const TextStyle(
-                                          color: Colors.black,
-                                        ),
+                          StreamBuilder<List<PowerUsageModel>>(
+                              stream: Rx.zip([
+                                _firebaseService.getRoomPowerUsage(user.roomId),
+                                _firebaseService.getRoomControling(user.roomId)
+                              ], (List<PowerUsageModel> values) => values),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasError) {
+                                  return const Text(
+                                      'Error loading power usage data');
+                                }
+
+                                if (!snapshot.hasData) {
+                                  return const Center(
+                                      child: CircularProgressIndicator());
+                                }
+
+                                final powerUsage = snapshot.data![0];
+                                final controlling = snapshot.data![1];
+
+                                final formattedDueDate =
+                                    DateFormatter.formatToLocaleDate(
+                                        controlling.tanggal);
+                                final formattedStartDate =
+                                    DateFormatter.getStartDate(
+                                        controlling.tanggal);
+
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  energyNotifier.value = powerUsage.energy;
+                                  dueDateNotifier.value = controlling.tanggal;
+
+                                  NotificationService.checkAndShowNotification(
+                                      controlling.tanggal);
+                                });
+
+                                return Column(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.only(
+                                        left: 27.0,
+                                        right: 18,
                                       ),
-                                      Row(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius:
+                                            BorderRadius.circular(28.0),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
-                                          ValueListenableBuilder<double>(
-                                            valueListenable: energyNotifier,
-                                            builder: (context, energy, child) {
-                                              return Text(
-                                                formatCurrency(1400 * energy),
-                                                style: const TextStyle(
-                                                  fontSize: 28.0,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: Color(0xffD65A23),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  DateFormat('dd MMM yyyy',
+                                                          'id_ID')
+                                                      .format(DateTime.now()),
+                                                  style: const TextStyle(
+                                                    color: Colors.black,
+                                                  ),
                                                 ),
-                                              );
-                                            },
+                                                Row(
+                                                  children: [
+                                                    ValueListenableBuilder<
+                                                        double>(
+                                                      valueListenable:
+                                                          energyNotifier,
+                                                      builder: (context, energy,
+                                                          child) {
+                                                        return Text(
+                                                          formatCurrency(
+                                                              controlling
+                                                                      .price *
+                                                                  energy),
+                                                          style:
+                                                              const TextStyle(
+                                                            fontSize: 28.0,
+                                                            fontWeight:
+                                                                FontWeight.w800,
+                                                            color: Color(
+                                                                0xffD65A23),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                  ],
+                                                ),
+                                                ValueListenableBuilder<String>(
+                                                  valueListenable:
+                                                      dueDateNotifier,
+                                                  builder: (context, dueDateStr,
+                                                      child) {
+                                                    final remainingDays =
+                                                        calculateRemainingDays(
+                                                            dueDateStr);
+                                                    return Text(
+                                                      '$remainingDays hari',
+                                                      style: const TextStyle(
+                                                        color: Colors.black,
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Image.asset(
+                                            'assets/images/electric-pattern.png',
+                                            width: 150,
                                           ),
                                         ],
                                       ),
-                                      ValueListenableBuilder<String>(
-                                        valueListenable: dueDateNotifier,
-                                        builder: (context, dueDateStr, child) {
-                                          final remainingDays =
-                                              calculateRemainingDays(
-                                                  dueDateStr);
-                                          return Text(
-                                            '$remainingDays hari',
-                                            style: const TextStyle(
-                                              color: Colors.black,
-                                            ),
-                                          );
-                                        },
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.only(
+                                        left: 10.0,
+                                        right: 10.0,
+                                        top: 20.0,
+                                        bottom: 45.0,
                                       ),
-                                    ],
-                                  ),
-                                ),
-                                Image.asset(
-                                  'assets/images/electric-pattern.png',
-                                  width: 150,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.only(
-                              left: 10.0,
-                              right: 10.0,
-                              top: 20.0,
-                              bottom: 45.0,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: const Color(0xffF75320),
-                                width: 1.0,
-                              ),
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(28.0),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(
-                                  width: double.infinity,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        'Tagihan Listrik',
-                                        style: TextStyle(
-                                          fontSize: 20.0,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.black,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: const Color(0xffF75320),
+                                          width: 1.0,
                                         ),
+                                        color: Colors.white,
+                                        borderRadius:
+                                            BorderRadius.circular(28.0),
                                       ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 20.0),
-                                StreamBuilder<List<PowerUsageModel>>(
-                                    stream: Rx.zip(
-                                        [
-                                          _firebaseService
-                                              .getRoomPowerUsage(user.roomId),
-                                          _firebaseService
-                                              .getRoomControling(user.roomId)
-                                        ],
-                                        (List<PowerUsageModel> values) =>
-                                            values),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasError) {
-                                        return const Text(
-                                            'Error loading power usage data');
-                                      }
-
-                                      if (!snapshot.hasData) {
-                                        return const CircularProgressIndicator();
-                                      }
-
-                                      final powerUsage = snapshot.data![0];
-                                      final controlling = snapshot.data![1];
-
-                                      final formattedDueDate =
-                                          DateFormatter.formatToLocaleDate(
-                                              controlling.tanggal);
-                                      final formattedStartDate =
-                                          DateFormatter.getStartDate(
-                                              controlling.tanggal);
-
-                                      WidgetsBinding.instance
-                                          .addPostFrameCallback((_) {
-                                        energyNotifier.value =
-                                            powerUsage.energy;
-                                        dueDateNotifier.value =
-                                            controlling.tanggal;
-                                      });
-
-                                      return Column(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          UsageRow(
-                                              label: 'Nama',
-                                              value: user.fullname,
-                                              gap: 20),
-                                          UsageRow(
-                                              label: 'No Kamar',
-                                              value:
-                                                  user.roomId.split('kamar')[1],
-                                              gap: 20),
-                                          const UsageRow(
-                                              label: 'Harga/kWh',
-                                              value: 'Rp 1.400,00',
-                                              gap: 20),
-                                          UsageRow(
-                                              label: 'Tegangan',
-                                              value:
-                                                  "${powerUsage.voltage.toStringAsFixed(2)} V",
-                                              gap: 20),
-                                          UsageRow(
-                                              label: 'Arus',
-                                              value:
-                                                  "${powerUsage.current.toStringAsFixed(2)} A",
-                                              gap: 20),
-                                          UsageRow(
-                                              label: 'Daya Aktif',
-                                              value:
-                                                  "${powerUsage.power.toStringAsFixed(2)} W",
-                                              gap: 20),
-                                          UsageRow(
-                                              label: 'Faktor Daya',
-                                              value: powerUsage.powerFactor
-                                                  .toStringAsFixed(2),
-                                              gap: 20),
-                                          UsageRow(
-                                              label: 'Energi Total',
-                                              value:
-                                                  '${powerUsage.energy.toStringAsFixed(2)} kWh',
-                                              gap: 20),
-                                          UsageRow(
-                                              label: 'Tanggal Mulai',
-                                              value: formattedStartDate,
-                                              gap: 20),
-                                          UsageRow(
-                                              label: 'Jatuh Tempo',
-                                              value: formattedDueDate,
-                                              gap: 20)
+                                          const SizedBox(
+                                            width: double.infinity,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  'Tagihan Listrik',
+                                                  style: TextStyle(
+                                                    fontSize: 20.0,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20.0),
+                                          Column(
+                                            children: [
+                                              UsageRow(
+                                                  label: 'Nama',
+                                                  value: user.fullname,
+                                                  gap: 20),
+                                              UsageRow(
+                                                  label: 'No Kamar',
+                                                  value: user.roomId
+                                                      .split('kamar')[1],
+                                                  gap: 20),
+                                              UsageRow(
+                                                  label: 'Harga/kWh',
+                                                  value: formatCurrency(
+                                                      controlling.price),
+                                                  gap: 20),
+                                              UsageRow(
+                                                  label: 'Tegangan',
+                                                  value:
+                                                      "${powerUsage.voltage.toStringAsFixed(2)} V",
+                                                  gap: 20),
+                                              UsageRow(
+                                                  label: 'Arus',
+                                                  value:
+                                                      "${powerUsage.current.toStringAsFixed(2)} A",
+                                                  gap: 20),
+                                              UsageRow(
+                                                  label: 'Daya Aktif',
+                                                  value:
+                                                      "${powerUsage.power.toStringAsFixed(2)} W",
+                                                  gap: 20),
+                                              UsageRow(
+                                                  label: 'Faktor Daya',
+                                                  value: powerUsage.powerFactor
+                                                      .toStringAsFixed(2),
+                                                  gap: 20),
+                                              UsageRow(
+                                                  label: 'Energi Total',
+                                                  value:
+                                                      '${powerUsage.energy.toStringAsFixed(2)} kWh',
+                                                  gap: 20),
+                                              UsageRow(
+                                                  label: 'Tanggal Mulai',
+                                                  value: formattedStartDate,
+                                                  gap: 20),
+                                              UsageRow(
+                                                  label: 'Jatuh Tempo',
+                                                  value: formattedDueDate,
+                                                  gap: 20)
+                                            ],
+                                          ),
                                         ],
-                                      );
-                                    }),
-                              ],
-                            ),
-                          ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }),
                         ],
                       ),
                     ),

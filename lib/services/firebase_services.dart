@@ -161,6 +161,16 @@ class FirebaseService {
     return querySnapshot.docs.isEmpty;
   }
 
+  Future<void> updatePrice(String roomId, double newPrice) async {
+    try {
+      await _rtdb.ref().child('controling').child(roomId).update({
+        'price': newPrice,
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<void> savePowerUsageHistory(
       String roomId, PowerUsageModel powerUsage) async {
     try {

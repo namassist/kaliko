@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:kaliko/models/user_model.dart';
 import 'package:kaliko/services/firebase_services.dart';
+import 'package:kaliko/services/notification_services.dart';
 import 'package:kaliko/utils/validation_rules.dart';
 import 'package:kaliko/widgets/show_dialog.dart';
 
@@ -49,6 +50,16 @@ class _SignInScreenState extends State<SignInScreen> {
             createdAt: (userData['createdAt'] as Timestamp).toDate(),
             updatedAt: (userData['updatedAt'] as Timestamp).toDate(),
           );
+
+          await NotificationService.saveUserSession(user.id, user.roomId);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Selamat datang kembali, ${user.fullname}!'),
+              ),
+            );
+          }
 
           if (user.roleId == 'admin') {
             Navigator.pushReplacementNamed(

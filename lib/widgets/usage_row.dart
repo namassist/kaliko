@@ -6,6 +6,7 @@ class UsageRow extends StatelessWidget {
   final TextStyle? labelStyle;
   final TextStyle? valueStyle;
   final double? gap;
+  final Widget? trailing; // Add trailing widget parameter
 
   const UsageRow({
     super.key,
@@ -14,6 +15,7 @@ class UsageRow extends StatelessWidget {
     this.labelStyle,
     this.valueStyle,
     this.gap = 10,
+    this.trailing, // Add to constructor
   });
 
   @override
@@ -44,10 +46,21 @@ class UsageRow extends StatelessWidget {
           ),
           Expanded(
             flex: 2,
-            child: Text(
-              value,
-              style: valueStyle ?? defaultValueStyle,
-              textAlign: TextAlign.right,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (trailing != null) ...[
+                  const SizedBox(width: 8),
+                  trailing!,
+                ],
+                Flexible(
+                  child: Text(
+                    value,
+                    style: valueStyle ?? defaultValueStyle,
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+              ],
             ),
           ),
           SizedBox(

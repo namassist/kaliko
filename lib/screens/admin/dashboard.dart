@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:kaliko/models/user_model.dart';
 import 'package:kaliko/services/firebase_services.dart';
+import 'package:kaliko/services/notification_services.dart';
 import 'package:kaliko/widgets/room_card.dart';
 import 'package:kaliko/widgets/show_dialog.dart';
 
@@ -30,6 +31,8 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
 
   void _handleLogout() async {
     await FirebaseAuth.instance.signOut();
+    await NotificationService.clearUserSession();
+
     if (mounted) {
       await showCustomDialog(
         context: context,
