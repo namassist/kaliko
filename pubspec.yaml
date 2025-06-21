@@ -49,7 +49,11 @@ dependencies:
   firebase_messaging: ^15.2.0
   flutter_local_notifications: ^18.0.1
   permission_handler: ^11.3.1
-  workmanager: ^0.5.2
+  workmanager:
+    git:
+      url: https://github.com/fluttercommunity/flutter_workmanager.git
+      path: workmanager
+      ref: main
 
 dev_dependencies:
   flutter_test:
