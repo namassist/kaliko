@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kaliko/screens/admin/dashboard.dart';
 import 'package:kaliko/screens/admin/invoice.dart';
 import 'package:kaliko/screens/admin/detail_room.dart';
+import 'package:kaliko/screens/auth/sign_in/forgot_password_screen.dart';
 import 'package:kaliko/screens/auth/sign_in/sign_in_screen.dart';
 import 'package:kaliko/screens/auth/sign_up/sign_up_profile_screen.dart';
 import 'package:kaliko/screens/auth/sign_up/sign_up_screen.dart';
@@ -25,6 +26,8 @@ class AppRouter {
             password: args['password'],
           ),
         );
+      case '/auth/forgot-password':
+        return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
       case '/admin/dashboard':
         return MaterialPageRoute(builder: (_) => const DashboardAdminScreen());
       case '/admin/detail-room':

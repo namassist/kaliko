@@ -15,6 +15,10 @@ class FirebaseService {
   final FirebaseDatabase _rtdb = FirebaseDatabase.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
+
   Future<UserCredential> signIn(String email, String password) async {
     try {
       return await _auth.signInWithEmailAndPassword(
@@ -179,6 +183,14 @@ class FirebaseService {
           .doc(roomId)
           .collection('power_history')
           .add(powerUsage.toMap());
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteUser(String userId) async {
+    try {
+      await _firestore.collection('users').doc(userId).delete();
     } catch (e) {
       rethrow;
     }

@@ -27,6 +27,7 @@ class _SignInScreenState extends State<SignInScreen> {
       setState(() => _isLoading = true);
 
       try {
+        await _firebaseService.signOut();
         final userCredential = await _firebaseService.signIn(_email, _password);
 
         if (!mounted) return;
@@ -164,7 +165,9 @@ class _SignInScreenState extends State<SignInScreen> {
                 Align(
                   alignment: Alignment.bottomRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/auth/forgot-password');
+                    },
                     child: const Text(
                       'Forgot Password?',
                       style: TextStyle(
