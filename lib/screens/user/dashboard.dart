@@ -28,6 +28,7 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
   final ValueNotifier<String> dueDateNotifier = ValueNotifier(
     DateFormat('dd/MM/yyyy').format(DateTime.now()),
   );
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void initState() {
@@ -52,6 +53,101 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
       return dueDateOnly.difference(today).inDays;
     } catch (e) {
       return 0;
+    }
+  }
+
+  // Method untuk handle delete akun user sendiri
+  Future<void> _deleteMyAccount() async {
+    // Dialog konfirmasi pertama
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus Akun'),
+        content: const Text(
+            'Apakah Anda yakin ingin menghapus akun? Tindakan ini tidak dapat dibatalkan.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Lanjutkan', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    // Dialog untuk input password (re-authentication)
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Masukkan password Anda untuk konfirmasi:'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child:
+                const Text('Hapus Akun', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      // Re-authenticate terlebih dahulu
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser?.email != null) {
+        await _firebaseService.reauthenticateUser(
+          currentUser!.email!,
+          _passwordController.text,
+        );
+      }
+
+      // Delete akun
+      await _firebaseService.deleteCurrentUserAccount();
+
+      if (mounted) {
+        // Navigate ke login screen
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Akun berhasil dihapus')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menghapus akun: $e')),
+        );
+      }
+    } finally {
+      _passwordController.clear();
     }
   }
 
@@ -165,34 +261,27 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
                                     size: 28.0,
                                   ),
                                   itemBuilder: (BuildContext context) => [
-                                    // const PopupMenuItem(
-                                    //   value: 'About',
-                                    //   child: SizedBox(
-                                    //     width: 100,
-                                    //     child: Row(
-                                    //       children: [
-                                    //         Icon(Icons.info_outline,
-                                    //             size: 20,
-                                    //             color: Colors.black54),
-                                    //         SizedBox(width: 10),
-                                    //         Text('About'),
-                                    //       ],
-                                    //     ),
-                                    //   ),
-                                    // ),
+                                    PopupMenuItem(
+                                      value: 'Hapus Akun',
+                                      onTap: _deleteMyAccount,
+                                      child: const Row(
+                                        children: [
+                                          Icon(Icons.delete_forever,
+                                              size: 20, color: Colors.black54),
+                                          SizedBox(width: 10),
+                                          Text('Hapus Akun'),
+                                        ],
+                                      ),
+                                    ),
                                     PopupMenuItem(
                                       value: 'Logout',
-                                      child: const SizedBox(
-                                        width: 100,
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.logout,
-                                                size: 20,
-                                                color: Colors.black54),
-                                            SizedBox(width: 10),
-                                            Text('Logout'),
-                                          ],
-                                        ),
+                                      child: const Row(
+                                        children: [
+                                          Icon(Icons.logout,
+                                              size: 20, color: Colors.black54),
+                                          SizedBox(width: 10),
+                                          Text('Logout'),
+                                        ],
                                       ),
                                       onTap: () async {
                                         await Future.delayed(Duration.zero);

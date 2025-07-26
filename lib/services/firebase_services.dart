@@ -195,4 +195,43 @@ class FirebaseService {
       rethrow;
     }
   }
+
+  Future<void> deleteCurrentUserAccount() async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('User tidak sedang login');
+      }
+
+      final userId = currentUser.uid;
+
+      await _firestore.collection('users').doc(userId).delete();
+
+      await currentUser.delete();
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        throw Exception(
+            'Untuk keamanan, silakan login ulang sebelum menghapus akun');
+      }
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> reauthenticateUser(String email, String password) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw Exception('User tidak login');
+
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+
+      await user.reauthenticateWithCredential(credential);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
